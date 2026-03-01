@@ -18,6 +18,10 @@ const companySchema = new mongoose.Schema({
         required: true
     },
     logo: {
+        type: String,
+        required: true
+    },
+    createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true

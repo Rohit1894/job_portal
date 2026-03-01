@@ -141,58 +141,43 @@ export const logout = async (req, res) => {
     });
   }
 };
-
 export const updateProfile = async (req, res) => {
   try {
     const { fullName, email, phoneNumber, bio, skills } = req.body;
 
-    if (!fullName || !email || !phoneNumber) {
-      return res.status(400).json({
-        message: "Full name, email and phone number are required",
-        success: false,
-      });
-    }
-
     const user = await User.findById(req.user.id);
 
     if (!user) {
-      return res.status(400).json({
+      return res.status(404).json({
         message: "User not found",
         success: false,
       });
     }
 
-    // Update basic info
-    user.fullName = fullName;
-    user.email = email;
-    user.phoneNumber = phoneNumber;
+    // Update only if provided
+    if (fullName) user.fullName = fullName;
+    if (email) user.email = email;
+    if (phoneNumber) user.phoneNumber = phoneNumber;
 
-    // Update nested profile safely
-    if (bio) {
-      user.profile.bio = bio;
+    if (!user.profile) {
+      user.profile = {};
     }
 
+    if (bio) user.profile.bio = bio;
+
     if (skills) {
-      const skillsArray = skills.split(",").map((skill) => skill.trim());
+      const skillsArray = skills.split(",").map((s) => s.trim());
       user.profile.skills = skillsArray;
     }
 
     await user.save();
 
-    const safeUser = {
-      _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      role: user.role,
-      profile: user.profile,
-    };
-
     return res.status(200).json({
       message: "Profile updated successfully",
       success: true,
-      user: safeUser,
+      user,
     });
+
   } catch (error) {
     console.error("Update Profile Error:", error);
     return res.status(500).json({
